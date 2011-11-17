@@ -17,7 +17,6 @@ f() ->
 g() -> 
 	'a\1b',
 	new_file:ok(),
-	
 	dict:new(),
 	hello,
 	f(), 
