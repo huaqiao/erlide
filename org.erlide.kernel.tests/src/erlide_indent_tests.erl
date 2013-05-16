@@ -267,6 +267,25 @@ indent_newline_char_2_test_() ->
             "    ok.\n",
     ?Test_indent(I, S).
 
+indent_newline_char_3_test_() ->
+    S = "" ++
+            "a()->\n"++
+            "foo($\n),\n"++
+            "receive\n" ++
+            "a->a;\n" ++
+            "a->a\n" ++
+            "end,\n" ++
+            "ok.\n",
+    I = "" ++
+            "a()->\n"++
+            "    foo($\n),\n"++
+            "    receive\n" ++
+            "        a->a;\n" ++
+            "        a->a\n" ++
+            "    end,\n" ++
+            "    ok.\n",
+    ?Test_indent(I, S).
+
 %%
 %% Local Functions
 %%
