@@ -130,7 +130,7 @@ public class MarkOccurencesHandler {
                         SearchUtil.addSearchResult(findRefs, refs);
                         fRefs = erlangEditor.markOccurencesHandler
                                 .getErlangRefs(theModule, findRefs);
-                        ErlLogger.debug("refs %s", refs);
+                        // ErlLogger.debug("refs %s", refs);
                     }
                 }
             } catch (final RpcTimeoutException e) {

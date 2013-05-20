@@ -407,16 +407,13 @@ public abstract class AbstractErlContentAssistProcessor implements
             final int offset) {
         try {
             if (module != null) {
-                try {
-                    final IErlElement element = module.getElementAt(offset);
-                    if (element instanceof ISourceReference) {
-                        final ISourceReference sr = (ISourceReference) element;
-                        final int start = sr.getSourceRange().getOffset();
-                        if (start <= offset) {
-                            return doc.get(start, offset - start);
-                        }
+                final IErlElement element = module.getElementAt(offset);
+                if (element instanceof ISourceReference) {
+                    final ISourceReference sr = (ISourceReference) element;
+                    final int start = sr.getSourceRange().getOffset();
+                    if (start <= offset) {
+                        return doc.get(start, offset - start);
                     }
-                } catch (final ErlModelException e) {
                 }
             }
             for (int n = offset - 1; n >= 0; --n) {
@@ -438,12 +435,7 @@ public abstract class AbstractErlContentAssistProcessor implements
         if (module == null) {
             return null;
         }
-        try {
-            return module.getElementAt(offset);
-        } catch (final ErlModelException e) {
-            ErlLogger.error(e);
-        }
-        return null;
+        return module.getElementAt(offset);
     }
 
     String getPrefix(final String before) {

@@ -601,4 +601,9 @@ public abstract class ErlElement extends PlatformObject implements IErlElement,
         return ErlModelCache.getDefault();
     }
 
+    @Override
+    public IErlElement getForm() {
+        return this;
+    }
+
 }

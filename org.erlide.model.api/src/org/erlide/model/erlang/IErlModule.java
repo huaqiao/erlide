@@ -40,111 +40,110 @@ import org.erlide.model.util.ErlangIncludeFile;
  * </p>
  */
 public interface IErlModule extends IErlElement, IParent, IOpenable,
-        ISourceUnit {
+		ISourceUnit {
 
-    /**
-     * Returns the smallest element within this module that includes the given
-     * source position (that is, a clause, attribute, etc.), or
-     * <code>null</code> if there is no element other than the compilation unit
-     * itself at the given position, or if the given position is not within the
-     * source range of this compilation unit.
-     * 
-     * @param position
-     *            a source position inside the compilation unit
-     * @return the innermost Erlang element enclosing a given source position or
-     *         <code>null</code> if none (excluding the compilation unit).
-     * @throws ErlModelException
-     *             if the compilation unit does not exist or if an exception
-     *             occurs while accessing its corresponding resource
-     */
-    IErlElement getElementAt(int position) throws ErlModelException;
+	/**
+	 * Returns the smallest element within this module that includes the given
+	 * source position (that is, a clause, attribute, etc.), or
+	 * <code>null</code> if there is no element other than the compilation unit
+	 * itself at the given position, or if the given position is not within the
+	 * source range of this compilation unit.
+	 * 
+	 * @param position
+	 *            a source position inside the compilation unit
+	 * @return the innermost Erlang element enclosing a given source position or
+	 *         <code>null</code> if none (excluding the compilation unit).
+	 */
+	IErlElement getElementAt(int position);
 
-    IErlMember getElementAtLine(int lineNumber);
+	IErlElement getFormAt(int offset);
 
-    /**
-     * Is this module a real one, or an include file?
-     * 
-     * @return true if .erl, false if .hrl
-     */
-    ModuleKind getModuleKind();
+	IErlMember getElementAtLine(int lineNumber);
 
-    Collection<IErlComment> getComments();
+	/**
+	 * Is this module a real one, or an include file?
+	 * 
+	 * @return true if .erl, false if .hrl
+	 */
+	ModuleKind getModuleKind();
 
-    long getTimestamp();
+	Collection<IErlComment> getComments();
 
-    IErlImport findImport(ErlangFunction function);
+	long getTimestamp();
 
-    Collection<IErlImport> getImports();
+	IErlImport findImport(ErlangFunction function);
 
-    IErlPreprocessorDef findPreprocessorDef(String definedName, Kind kind);
+	Collection<IErlImport> getImports();
 
-    public Collection<IErlPreprocessorDef> getPreprocessorDefs(final Kind kind);
+	IErlPreprocessorDef findPreprocessorDef(String definedName, Kind kind);
 
-    Collection<ErlangIncludeFile> getIncludeFiles() throws ErlModelException;
+	public Collection<IErlPreprocessorDef> getPreprocessorDefs(final Kind kind);
 
-    // void getScanner();
-    //
-    // void disposeScanner();
+	Collection<ErlangIncludeFile> getIncludeFiles() throws ErlModelException;
 
-    void initialReconcile();
+	// void getScanner();
+	//
+	// void disposeScanner();
 
-    void reconcileText(int offset, int removeLength, String newText,
-            IProgressMonitor mon);
+	void initialReconcile();
 
-    void postReconcile(IProgressMonitor mon);
+	void reconcileText(int offset, int removeLength, String newText,
+			IProgressMonitor mon);
 
-    void finalReconcile();
+	void postReconcile(IProgressMonitor mon);
 
-    /**
-     * Returns a collection of modules that include this one.
-     **/
-    Set<IErlModule> getDirectDependentModules() throws ErlModelException;
+	void finalReconcile();
 
-    /**
-     * Returns the transitive closure of modules that include this one.
-     * 
-     * @throws CoreException
-     **/
-    Set<IErlModule> getAllDependentModules() throws CoreException;
+	/**
+	 * Returns a collection of modules that include this one.
+	 **/
+	Set<IErlModule> getDirectDependentModules() throws ErlModelException;
 
-    /**
-     * Resets parser so that the next parse will be a full parse, possibly
-     * updating the parser cache
-     * 
-     * @param newText
-     * @throws ErlModelException
-     */
-    void resetAndCacheScannerAndParser(String newText) throws ErlModelException;
+	/**
+	 * Returns the transitive closure of modules that include this one.
+	 * 
+	 * @throws CoreException
+	 **/
+	Set<IErlModule> getAllDependentModules() throws CoreException;
 
-    /**
-     * Get the module name without extension
-     * 
-     * @return name as string
-     */
-    String getModuleName();
+	/**
+	 * Resets parser so that the next parse will be a full parse, possibly
+	 * updating the parser cache
+	 * 
+	 * @param newText
+	 * @throws ErlModelException
+	 */
+	void resetAndCacheScannerAndParser(String newText) throws ErlModelException;
 
-    IErlFunction findFunction(ErlangFunction erlangFunction);
+	/**
+	 * Get the module name without extension
+	 * 
+	 * @return name as string
+	 */
+	String getModuleName();
 
-    IErlTypespec findTypespec(String typeName);
+	IErlFunction findFunction(ErlangFunction erlangFunction);
 
-    void setResource(IFile file);
+	IErlTypespec findTypespec(String typeName);
 
-    void setComments(Collection<? extends IErlComment> comments);
+	void setResource(IFile file);
 
-    Collection<IErlModule> findAllIncludedFiles() throws CoreException;
+	void setComments(Collection<? extends IErlComment> comments);
 
-    boolean isOnSourcePath();
+	Collection<IErlModule> findAllIncludedFiles() throws CoreException;
 
-    boolean isOnIncludePath();
+	boolean isOnSourcePath();
 
-    boolean exportsAllFunctions();
+	boolean isOnIncludePath();
 
-    String getScannerName();
+	boolean exportsAllFunctions();
 
-    IErlScanner getScanner();
+	String getScannerName();
 
-    void createScanner();
+	IErlScanner getScanner();
 
-    boolean getLogging();
+	void createScanner();
+
+	boolean getLogging();
 
 }

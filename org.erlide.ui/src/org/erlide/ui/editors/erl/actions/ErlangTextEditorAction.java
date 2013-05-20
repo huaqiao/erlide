@@ -23,7 +23,6 @@ import org.erlide.backend.BackendCore;
 import org.erlide.backend.BackendUtils;
 import org.erlide.core.ErlangCore;
 import org.erlide.core.ErlangStatus;
-import org.erlide.model.ErlModelException;
 import org.erlide.model.erlang.IErlModule;
 import org.erlide.model.erlang.ISourceRange;
 import org.erlide.model.erlang.ISourceReference;
@@ -103,40 +102,35 @@ public class ErlangTextEditorAction extends TextEditorAction {
             if (module != null) {
                 final int offset1 = selection.getOffset(), offset2 = offset1
                         + selection.getLength();
-                try {
-                    final IErlElement e1 = module.getElementAt(offset1);
-                    final IErlElement e2 = module.getElementAt(offset2);
-                    if (e1 instanceof ISourceReference) {
-                        final ISourceReference ref1 = (ISourceReference) e1;
-                        final ISourceRange r1 = ref1.getSourceRange();
-                        final int offset = r1.getOffset();
-                        int length = r1.getLength();
-                        if (e1 == e2) {
-                            final int docLength = document.getLength();
-                            if (offset + length > docLength) {
-                                length = docLength - offset;
-                            }
-                            return extendSelectionToWholeLines(document,
-                                    new TextSelection(document, offset, length));
-                        } else if (e2 == null) {
-                            return extendSelectionToWholeLines(
-                                    document,
-                                    new TextSelection(document, offset,
-                                            selection.getLength()
-                                                    + selection.getOffset()
-                                                    - offset));
-                        } else if (e2 instanceof ISourceReference) {
-                            final ISourceReference ref2 = (ISourceReference) e2;
-                            final ISourceRange r2 = ref2.getSourceRange();
-                            return extendSelectionToWholeLines(
-                                    document,
-                                    new TextSelection(document, offset, r2
-                                            .getOffset()
-                                            - offset
-                                            + r2.getLength()));
+                final IErlElement e1 = module.getFormAt(offset1);
+                final IErlElement e2 = module.getFormAt(offset2);
+                if (e1 instanceof ISourceReference) {
+                    final ISourceReference ref1 = (ISourceReference) e1;
+                    final ISourceRange r1 = ref1.getSourceRange();
+                    final int offset = r1.getOffset();
+                    int length = r1.getLength();
+                    if (e1 == e2) {
+                        final int docLength = document.getLength();
+                        if (offset + length > docLength) {
+                            length = docLength - offset;
                         }
+                        return extendSelectionToWholeLines(document,
+                                new TextSelection(document, offset, length));
+                    } else if (e2 == null) {
+                        return extendSelectionToWholeLines(
+                                document,
+                                new TextSelection(document, offset, selection
+                                        .getLength()
+                                        + selection.getOffset()
+                                        - offset));
+                    } else if (e2 instanceof ISourceReference) {
+                        final ISourceReference ref2 = (ISourceReference) e2;
+                        final ISourceRange r2 = ref2.getSourceRange();
+                        return extendSelectionToWholeLines(
+                                document,
+                                new TextSelection(document, offset, r2
+                                        .getOffset() - offset + r2.getLength()));
                     }
-                } catch (final ErlModelException e) {
                 }
             }
         }

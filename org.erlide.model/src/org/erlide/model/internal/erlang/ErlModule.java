@@ -188,8 +188,7 @@ public class ErlModule extends Openable implements IErlModule {
     }
 
     @Override
-    public IErlElement getElementAt(final int position)
-            throws ErlModelException {
+    public IErlElement getElementAt(final int position) {
         return ErlModelManager.getErlangModel().innermostThat(this,
                 new Predicate<IErlElement>() {
                     @Override
@@ -738,6 +737,14 @@ public class ErlModule extends Openable implements IErlModule {
     @Override
     public boolean getLogging() {
         return logging;
+    }
+
+    @Override
+    public IErlElement getFormAt(int offset) {
+        IErlElement e = getElementAt(offset);
+        if (e != null)
+            return e.getForm();
+        return null;
     }
 
 }

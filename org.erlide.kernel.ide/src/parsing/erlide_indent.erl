@@ -35,7 +35,8 @@ default_indent_prefs() ->
      {fun_body, 5},
      {paren, 1},
      {'<<', 2},
-     {end_paren, 0}].
+     {end_paren, 0},
+     {record_fields, 2}].
 
 %%
 %% API Functions
@@ -223,10 +224,10 @@ i_with(W, I) ->
 i_with(W, A, I) ->
     I#i{current=indent_by(W, I#i.prefs), anchor=head(A)}.
 
-i_with(W1, W2, A, I) ->
-    I#i{current=indent_by(W1, I#i.prefs)+indent_by(W2, I#i.prefs),
-        anchor=head(A)}.
-
+%% i_with(W1, W2, A, I) ->
+%%     I#i{current=indent_by(W1, I#i.prefs)+indent_by(W2, I#i.prefs),
+%%         anchor=head(A)}.
+%% 
 i_with_old_or_new_anchor(none, ANew, I) ->
     i_with(none, ANew, I);
 i_with_old_or_new_anchor(AOld, _ANew, I) ->
@@ -267,7 +268,6 @@ i_expr_rest(R0, I, A) ->
         eof ->
             {R0, A};
         '#' -> % record something
-      ?D(I),
             i_record(R0, I);
         ':' -> % external function call
             R1 = i_kind(':', R0, I),
@@ -303,6 +303,7 @@ i_expr_list(R, I) ->
     i_expr_list(R, I, none).
 
 i_expr_list(R0, I0, A0) ->
+    ?D(apa),
     R1 = i_comments(R0, I0),
     ?D(R1),
     {R2, A1} = i_expr(R1, I0, A0),
@@ -501,14 +502,14 @@ i_macro(R0, I) ->
 
 i_macro_rest(R0, I) ->
     case i_sniff(R0) of
-  Paren when Paren=:='('; Paren=:='{'; Paren=:='[' ->
-       R1 = i_kind(Paren, R0, I),
-      R2 = i_parameters(R1, I),
-      R3 = i_end_paren(R2, I),
-      i_macro_rest(R3, I);
-  K when K=:=':'; K=:=','; K=:=';'; K=:=')'; K=:='}'; K=:=']'; K=:='>>'; K=:='of';
-         K=:='end'; K=:='->'; K =:= '||' ->
-      R0;
+        Paren when Paren=:='('; Paren=:='{'; Paren=:='[' ->
+            R1 = i_kind(Paren, R0, I),
+            R2 = i_parameters(R1, I),
+            R3 = i_end_paren(R2, I),
+            i_macro_rest(R3, I);
+        K when K=:=':'; K=:=','; K=:=';'; K=:=')'; K=:='}'; K=:=']'; K=:='>>'; K=:='of';
+               K=:='end'; K=:='->'; K =:= '||' ->
+            R0;
         K ->
             case erlide_scan:reserved_word(K) of
                 true ->
@@ -637,7 +638,12 @@ i_record([#token{kind='#'} | R0], I0) ->
             ?D(R4),
             {R4, I#i.anchor};
         '{' ->
-            i_expr(R2, I, none);
+            R3 = i_kind('{', R2, I),       % }
+            A = R1,
+            I1 = i_with(record_fields, A, I),
+            R4 = i_end_paren_or_expr_list(R3, I1#i{in_block=false}),
+            I2 = i_with(end_paren, A, I),
+            {i_end_paren(R4, I2), A};
         '?' ->
             i_expr(R2, I, none);
         _ ->
@@ -731,6 +737,9 @@ i_declaration(R0, I) ->
         [#token{kind=atom, value='type'} | _] ->
             R2 = i_kind(atom, R1, I),
             i_type(R2, I);
+        [#token{kind=atom, value=record} | _] ->
+            R2 = i_kind(atom, R1, I),
+            i_record_def(R2, I);
         _ ->
             {R2, _A} = i_expr(R1, I, none),
             i_kind(dot, R2, I)
@@ -783,6 +792,21 @@ i_spec(R0, I) ->
                 i_spec_list(R0, I)
         end,
     i_dot_or_semi(R, I).
+
+i_record_def(R0, I0) ->
+    R1 = i_kind('(', R0, I0),
+    Kind = i_sniff(R1),
+    R2 = i_kind(Kind, R1, I0),
+    R3 = i_kind(',', R2, I0),
+    R4 = i_kind('{', R3, I0),
+    A = R1,
+    I1 = i_with(record_fields, A, I0),
+    ?D(I1#i.current),
+    R5 = i_expr_list(R4, I1, R4),
+    ?D(R5),
+    R6 = i_kind('}', R5, I0),
+    R7 = i_kind(')', R6, I0),
+    i_kind(dot, R7, I0).
 
 i_fun_clause(R0, I0) ->
     R1 = i_comments(R0, I0),
