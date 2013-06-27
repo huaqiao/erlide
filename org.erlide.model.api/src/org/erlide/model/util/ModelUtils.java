@@ -214,14 +214,24 @@ public class ModelUtils {
             final IErlProject project, final String moduleName,
             final String modulePath, final IErlElementLocator.Scope scope)
             throws ErlModelException {
-        if (project != null) {
-            return model.findModuleFromProject(project, moduleName, modulePath,
-                    scope);
-        }
-        if (scope == IErlElementLocator.Scope.ALL_PROJECTS) {
-            return model.findModule(moduleName, modulePath);
-        }
-        return null;
+//        if (project != null) {
+//            return model.findModuleFromProject(project, moduleName, modulePath,
+//                    scope);
+//        }
+//        if (scope == IErlElementLocator.Scope.ALL_PROJECTS) {
+//            return model.findModule(moduleName, modulePath);
+//        }
+//        return null;
+    	// Hack Huaqiao support open module
+    	 if (project != null && moduleName != null) {
+             return model.findModuleFromProject(project, moduleName, modulePath,
+                     scope);
+         } 
+         if (scope == IErlElementLocator.Scope.ALL_PROJECTS || project == null) {
+         	ErlLogger.debug("ModuleName %s, findModule path: %s", moduleName, modulePath);
+         	return model.findModule(moduleName, modulePath);
+         }   
+         return null;
     }
 
     public static IErlElement findTypeDef(final IErlElementLocator model,

@@ -231,7 +231,7 @@ public class ProjectPreferencesWizardPage extends WizardPage {
             p = p.removeLastSegments(1).removeFirstSegments(n).setDevice(null);
             String ps = p.toString();
             if ("".equals(ps)) {
-                ps = ".";
+                ps = "";
             }
             if (res.indexOf(ps) < 0) {
                 res.add(ps);

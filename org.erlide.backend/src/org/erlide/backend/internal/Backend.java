@@ -120,7 +120,8 @@ public abstract class Backend implements IStreamListener, IBackend {
                     SystemConfiguration.getInstance()
                             .getKillProcessSizeLimitMB());
             // TODO should use extension point!
-            getRpcSite().call("erlide_kernel_builder", "init", "");
+            // Hack huaqiao, disabled auto builder 
+            //getRpcSite().call("erlide_kernel_builder", "init", "");
             getRpcSite().call("erlide_kernel_ide", "init", "");
 
             // TODO start tracing when configured to do so!

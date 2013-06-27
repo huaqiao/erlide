@@ -44,7 +44,8 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
     private static final int EPMD_PORT = Integer.parseInt(System.getProperty(
             "erlide.epmd.port", "4369"));
 
-    private static final int MAX_RETRIES = 15;
+    // Hack huaqiao, changed 15 to 10
+    private static final int MAX_RETRIES = 10;
     public static final int RETRY_DELAY = Integer.parseInt(System.getProperty(
             "erlide.connect.delay", "400"));
 
@@ -58,7 +59,6 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
     private final EventBus eventBus;
     protected volatile boolean stopped;
     private EventParser eventHelper;
-    boolean crashed;
 
     final static boolean DEBUG = Boolean.parseBoolean(System
             .getProperty("erlide.event.daemon"));
@@ -74,7 +74,11 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
         registerEventListener(new LogEventHandler(nodeName));
         registerEventListener(new ErlangLogEventHandler(nodeName));
 
-        addListener(new ErlRuntimeListener(), executor());
+        addListener(getListener(), executor());
+    }
+
+    protected Listener getListener() {
+        return new MyListener();
     }
 
     @Override
@@ -89,8 +93,7 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
             triggerShutdown();
             ErlLogger.error(COULD_NOT_CONNECT, getNodeName());
         }
-        stopped = false;
-        crashed = false;
+
     }
 
     @Override
@@ -101,6 +104,7 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
             listener.runtimeDown(ErlRuntime.this);
         }
         listener = null;
+
         rpcSite.setConnected(false);
     }
 
@@ -114,10 +118,8 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
         final OtpMbox eventBox = getEventMbox();
         do {
             receiveEventMessage(eventBox);
-        } while (!stopped && !crashed);
-        if (crashed && !stopped) {
-            waitForExit();
-        }
+            checkNodeStatus();
+        } while (!stopped);
     }
 
     private void receiveEventMessage(final OtpMbox eventBox)
@@ -143,6 +145,10 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
         } catch (final OtpErlangDecodeException e) {
             ErlLogger.error(e);
         }
+    }
+
+    // set stopped to true or throw an exception if anything failed
+    protected void checkNodeStatus() throws Exception {
     }
 
     @Override
@@ -189,9 +195,6 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
     @Override
     public void dispose() {
         triggerShutdown();
-    }
-
-    protected void waitForExit() throws ErlRuntimeException {
     }
 
     @Override
@@ -356,38 +359,46 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
         @Override
         public void remoteStatus(final String node, final boolean up,
                 final Object info) {
-            if (node.equals(getNodeName()) && !up) {
-                triggerCrashed();
+//            if (node.equals(getNodeName()) && !up) {
+//                crashed();
+//                triggerShutdown();
+//            }
+        	// Hack huaqiao, maybe network loss connect, but node is alive
+        	// then try connect to javaNode.
+            if (up) {
+                ErlLogger.debug("Node %s is up", getNodeName());
+            } else if(stopped) {
+                ErlLogger.debug("Node %s is stopped, info: %s", getNodeName(),
+                        info);
+            } else {
+                ErlLogger.debug("Node %s is loss connect, try reconnect. info: %s", getNodeName(),
+                        info);
             }
         }
     }
 
     @Subscribe
     public void deadEventHandler(final DeadEvent dead) {
-        ErlLogger.warn("Dead event: " + dead + " in runtime " + getNodeName());
+        ErlLogger.warn("Dead event: " + dead + " in " + getNodeName());
     }
 
-    protected void triggerCrashed() {
-        rpcSite.setConnected(false);
-        crashed = true;
+    protected void crashed() {
     }
 
-    private class ErlRuntimeListener implements Listener {
+    protected class MyListener implements Listener {
         @Override
         public void terminated(final State from) {
-            ErlLogger.debug(String.format("Runtime %s terminated, exit code: ",
-                    getNodeName(), getExitCode()));
-            if (data.isReportErrors()) {
-                reporter.reportRuntimeDown(getNodeName(), getSystemStatus());
-            }
+            ErlLogger.debug("Runtime %s terminated", getNodeName());
         }
 
         @Override
         public void failed(final State from, final Throwable failure) {
-            ErlLogger.warn(String.format("Runtime %s crashed, exit code: ",
-                    getNodeName(), getExitCode()));
-            reporter.createFileReport(getNodeName(), getExitCode(),
-                    getRuntimeData().getWorkingDir(), getSystemStatus());
+            ErlLogger.warn("Runtime %s crashed", getNodeName());
+            if (data.isReportErrors()) {
+                final String msg = reporter.reportRuntimeDown(getNodeName(),
+                        getSystemStatus());
+                ErlLogger.error(msg);
+            }
         }
 
         @Override
@@ -404,10 +415,6 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
         public void stopping(final State from) {
             ErlLogger.debug("Runtime %s stopping", getNodeName());
         }
-    }
-
-    public int getExitCode() {
-        return -1;
     }
 
 }

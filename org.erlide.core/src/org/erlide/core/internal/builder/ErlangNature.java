@@ -91,7 +91,8 @@ public class ErlangNature implements IProjectNature {
             final ICommand[] old = description.getBuildSpec(), specs = new ICommand[old.length + 1];
             System.arraycopy(old, 0, specs, 0, old.length);
             final ICommand command = description.newCommand();
-            command.setBuilderName(ErlangCore.BUILDER_ID);
+            //Hack Huaqiao, disabled erlang builder
+            //command.setBuilderName(ErlangCore.BUILDER_ID);
             specs[old.length] = command;
             description.setBuildSpec(specs);
             project.setDescription(description, new NullProgressMonitor());

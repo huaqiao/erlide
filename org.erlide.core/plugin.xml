@@ -13,16 +13,6 @@
       <builder id="org.erlide.core.erlbuilder"/>
    </extension>
    <extension
-         id="erlbuilder"
-         name="Erlang builder"
-         point="org.eclipse.core.resources.builders">
-      <builder >
-         <run
-               class="org.erlide.core.internal.builder.ErlangBuilder">
-         </run>
-      </builder>
-   </extension>
-   <extension
          point="org.eclipse.core.contenttype.contentTypes">
       <content-type
             base-type="org.eclipse.core.runtime.text"
