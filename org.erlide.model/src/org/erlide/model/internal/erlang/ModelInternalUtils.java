@@ -24,6 +24,9 @@ import com.ericsson.otp.erlang.OtpErlangLong;
 import com.ericsson.otp.erlang.OtpErlangRangeException;
 import com.ericsson.otp.erlang.OtpErlangTuple;
 
+// Hack add
+import org.erlide.util.ErlLogger;
+
 public class ModelInternalUtils {
 
     public static ISourceRange findVariable(final IRpcSite backend,
@@ -59,7 +62,10 @@ public class ModelInternalUtils {
                 return include;
             }
         }
-        return null;
+        //return null;
+        // Hack Huaqio support no project Module can open include files
+        ErlLogger.debug("%s Open Include : %s", res.getName(), res.getPath());
+        return model.findModule(res.getName(), res.getPath());
     }
 
 }

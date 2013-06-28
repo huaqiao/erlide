@@ -128,6 +128,7 @@ public class OpenAction extends SelectionDispatchAction {
         return true;
     }
 
+    @SuppressWarnings("restriction")
     @Override
     public void run(final ITextSelection selection) {
         try {
@@ -149,11 +150,25 @@ public class OpenAction extends SelectionDispatchAction {
                 final String scannerName = editor.getScannerName();
                 module = editor.getModule();
                 project = editor.getProject();
+//                openResult = ErlideOpen
+//                        .open(backend, scannerName, offset,
+//                                ModelUtils.getImportsAsList(module),
+//                                project.getExternalModulesString(),
+//                                model.getPathVars());
+                // Hack Huaqiao support not project open module
+                if (project == null){
+                    openResult = ErlideOpen
+                            .open(backend, scannerName, offset,
+                                    ModelUtils.getImportsAsList(module),
+                                    null,
+                                    model.getPathVars());
+                } else {
                 openResult = ErlideOpen
                         .open(backend, scannerName, offset,
                                 ModelUtils.getImportsAsList(module),
                                 project.getExternalModulesString(),
                                 model.getPathVars());
+                }
                 ErlLogger.debug("open " + openResult);
                 element = editor.getElementAt(offset, true);
             } else if (activeEditor instanceof ITextEditor) {
@@ -213,6 +228,7 @@ public class OpenAction extends SelectionDispatchAction {
         }
     }
 
+    @SuppressWarnings("restriction")
     public static Object findOpenResult(final ITextEditor editor,
             final IErlModule module, final IRpcSite backend,
             final IErlProject project, final OpenResult openResult,
@@ -273,6 +289,7 @@ public class OpenAction extends SelectionDispatchAction {
         return false;
     }
 
+    @SuppressWarnings("restriction")
     private static IErlElement findLocalCall(final IErlModule module,
             final IRpcSite backend, final IErlProject erlProject,
             final OpenResult res, final IErlElement element,

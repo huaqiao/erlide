@@ -141,9 +141,19 @@ public class ErlModule extends Openable implements IErlModule {
                 try {
                     if (encoding != null) {
                         charset = encoding;
+//                    } else {
+//                        charset = ModelUtils.getProject(this)
+//                                .getWorkspaceProject().getDefaultCharset();
+//                    }
+                        // Hack Huaqiao, support open not project Erlang Module
                     } else {
+                        if (ModelUtils.getProject(this) == null ) {
+                            //Default charset
+                        charset = "UTF-8";
+                      } else {
                         charset = ModelUtils.getProject(this)
                                 .getWorkspaceProject().getDefaultCharset();
+                      }
                     }
                     initialText = Util.getInputStreamAsString(
                             new FileInputStream(new File(path)), charset);
