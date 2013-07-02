@@ -10,7 +10,6 @@
                class="org.erlide.core.internal.builder.ErlangNature">
          </run>
       </runtime>
-      <builder id="org.erlide.core.erlbuilder"/>
    </extension>
    <extension
          point="org.eclipse.core.contenttype.contentTypes">

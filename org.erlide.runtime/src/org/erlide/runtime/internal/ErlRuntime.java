@@ -59,26 +59,23 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
     private final EventBus eventBus;
     protected volatile boolean stopped;
     private EventParser eventHelper;
-
+    boolean crashed;
+    
     final static boolean DEBUG = Boolean.parseBoolean(System
             .getProperty("erlide.event.daemon"));
     public static final long POLL_INTERVAL = 200;
 
     public ErlRuntime(final RuntimeData data) {
-        this.data = data;
-        reporter = new ErlRuntimeReporter(data.isInternal());
+    	this.data = data;
+    	reporter = new ErlRuntimeReporter(data.isInternal());
 
-        final String nodeName = getNodeName();
-        eventBus = new EventBus(nodeName);
-        eventBus.register(this);
-        registerEventListener(new LogEventHandler(nodeName));
-        registerEventListener(new ErlangLogEventHandler(nodeName));
+    	final String nodeName = getNodeName();
+    	eventBus = new EventBus(nodeName);
+    	eventBus.register(this);
+    	registerEventListener(new LogEventHandler(nodeName));
+    	registerEventListener(new ErlangLogEventHandler(nodeName));
 
-        addListener(getListener(), executor());
-    }
-
-    protected Listener getListener() {
-        return new MyListener();
+    	addListener(new ErlRuntimeListener(), executor());
     }
 
     @Override
@@ -93,6 +90,8 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
     		triggerShutdown();
     		ErlLogger.error(COULD_NOT_CONNECT, getNodeName());
     	}
+    	 stopped = false;
+    	 crashed = false;
     }
 
     @Override
@@ -103,7 +102,6 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
             listener.runtimeDown(ErlRuntime.this);
         }
         listener = null;
-
         rpcSite.setConnected(false);
     }
 
@@ -114,11 +112,13 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
 
     @Override
     protected void run() throws Exception {
-        final OtpMbox eventBox = getEventMbox();
-        do {
-            receiveEventMessage(eventBox);
-            checkNodeStatus();
-        } while (!stopped);
+    	final OtpMbox eventBox = getEventMbox();
+    	do {
+    		receiveEventMessage(eventBox);
+    	} while (!stopped && !crashed);
+    	if (crashed && !stopped) {
+    		waitForExit();
+    	}
     }
 
     private void receiveEventMessage(final OtpMbox eventBox)
@@ -144,10 +144,6 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
         } catch (final OtpErlangDecodeException e) {
             ErlLogger.error(e);
         }
-    }
-
-    // set stopped to true or throw an exception if anything failed
-    protected void checkNodeStatus() throws Exception {
     }
 
     @Override
@@ -293,7 +289,7 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
     }
 
     private void wait_for_epmd() {
-        wait_for_epmd("localhost");
+        wait_for_epmd(null);
     }
 
     private void wait_for_epmd(final String host) {
@@ -378,13 +374,15 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
 
     @Subscribe
     public void deadEventHandler(final DeadEvent dead) {
-        ErlLogger.warn("Dead event: " + dead + " in " + getNodeName());
+    	ErlLogger.warn("Dead event: " + dead + " in runtime " + getNodeName());
     }
 
-    protected void crashed() {
+    protected void triggerCrashed() {
+    	rpcSite.setConnected(false);
+    	crashed = true;
     }
 
-    protected class MyListener implements Listener {
+    private class ErlRuntimeListener implements Listener {
         @Override
         public void terminated(final State from) {
             ErlLogger.debug("Runtime %s terminated", getNodeName());
@@ -416,11 +414,9 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
         }
     }
 
-	protected void waitForExit() throws ErlRuntimeException {
-		ErlLogger.debug("waitForExit %s ", getNodeName());
-		
-	}
-
+    protected void waitForExit() throws ErlRuntimeException {
+    	   }
+    
 	public int getExitCode() {
 		return -1;
 	}
