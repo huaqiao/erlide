@@ -49,20 +49,33 @@ public class HostnameUtils {
      * names.
      */
     public static void detectHostNames(final String otpHome) {
-        final ErlangHostnameRetriever retriever = new ErlangHostnameRetriever(
-                otpHome);
-        erlangLongName = retriever.checkHostName(true);
-        if (erlangLongName == null) {
-            erlangLongName = retriever.checkHostName(true,
-                    getJavaLongHostName());
-        }
-        erlangShortName = retriever.checkHostName(false);
-        if (erlangShortName == null) {
-            erlangShortName = retriever.checkHostName(false,
-                    getJavaShortHostName());
-        }
+    	final ErlangHostnameRetriever retriever = new ErlangHostnameRetriever(
+    			otpHome);
+    	erlangShortName = retriever.checkHostName(false, erlangShortNameFallback);
+    	if (erlangShortName == null) {
+    		erlangLongName = retriever.checkHostName(false,
+    				erlangLongNameFallback);
+    	}  else if (erlangLongName == null) {
+    		erlangLongName = retriever.checkHostName(false);
+    		if (erlangShortName == null) {
+    			erlangShortName = retriever.checkHostName(false,
+    					getJavaShortHostName());
+    			if (erlangShortName == null) {
+    				erlangLongName = retriever.checkHostName(true);
+    				if (erlangLongName == null) {
+    					erlangLongName = retriever.checkHostName(true,
+    							getJavaLongHostName());
+    					if (erlangLongName == null) {
+    						erlangLongName = erlangLongNameFallback;
+    					}
+    				}
+    			}
+    		}
+    	}
 
-        ErlLogger.debug("Detected:: %s && %s", erlangShortName, erlangLongName);
+    	ErlLogger.debug("Detected:: ErlangLongName(%s) && ErlangShortName(%s); " +
+    			"JavaLongHostName(%s) && JavaShortHostName(%s)",
+    			erlangLongName, erlangShortName, getJavaLongHostName(), getJavaShortHostName());
     }
 
     public static String getErlangLongHostName() {

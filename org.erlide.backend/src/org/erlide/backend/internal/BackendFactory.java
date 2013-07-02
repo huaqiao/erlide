@@ -97,15 +97,16 @@ public class BackendFactory implements IBackendFactory {
 
     private BackendData getIdeBackendData() {
         final RuntimeInfo info = getIdeRuntimeInfo();
+        
         final BackendData result = new BackendData(info);
         result.setNodeName(getIdeNodeName());
         result.setDebug(false);
         result.setConsole(SystemConfiguration.getInstance().isDeveloper());
         result.setManaged(true);
         result.setRestartable(true);
-        result.setLongName(SystemConfiguration
-                .hasFeatureEnabled("erlide.shortname") ? false : HostnameUtils
-                .canUseLongNames());
+        result.setLongName((SystemConfiguration
+                .hasFeatureEnabled("erlide.shortname") || HostnameUtils
+                .canUseShortNames()) ? false : HostnameUtils.canUseLongNames());
         result.setInternal(true);
         result.setReportErrors(true);
         result.debugPrint();
@@ -122,8 +123,9 @@ public class BackendFactory implements IBackendFactory {
         result.setRestartable(true);
         result.setDebug(false);
         result.setManaged(true);
-        result.setConsole(false);
-        result.setLongName(HostnameUtils.canUseLongNames());
+        result.setConsole(SystemConfiguration.getInstance().isDeveloper());
+        result.setLongName(HostnameUtils.canUseShortNames() ? false : 
+            HostnameUtils.canUseLongNames());
         result.setInternal(true);
         result.setReportErrors(true);
         return result;

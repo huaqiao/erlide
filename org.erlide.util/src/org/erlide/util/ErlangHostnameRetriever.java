@@ -18,9 +18,13 @@ public class ErlangHostnameRetriever {
     }
 
     public String checkHostName(final boolean longHost, String hostName) {
-        nodeName = "foo" + System.currentTimeMillis();
+    	nodeName = "foo" + System.currentTimeMillis();
+    	String nodeFullName = nodeName;
+    	if (!(hostName == null)) {
+    		nodeFullName = nodeFullName + "@" + hostName;
+    	}
         final ProcessBuilder builder = new ProcessBuilder(Lists.newArrayList(
-                otpHome + "/bin/erl", longHost ? "-name" : "-sname", nodeName,
+                otpHome + "/bin/erl", longHost ? "-name" : "-sname", nodeFullName,
                 "-setcookie", "erlide"));
         String result = null;
         try {
@@ -63,7 +67,7 @@ public class ErlangHostnameRetriever {
         try {
             final OtpNode node = new OtpNode("jtest", "erlide");
             ErlLogger.debug("Ping: " + nodeName + "@" + hostName);
-            final boolean result = node.ping(nodeName + "@" + hostName, 1000);
+            final boolean result = node.ping(nodeName + "@" + hostName, 500);
             node.close();
             return result;
         } catch (final IOException e) {

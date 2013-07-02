@@ -83,17 +83,16 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
 
     @Override
     protected void startUp() throws Exception {
-        localNode = startLocalNode();
-        eventMBox = createMbox("rex");
-        rpcSite = new RpcSite(this, localNode, getNodeName());
-        connect();
-        rpcSite.setConnected(true);
-
-        if (!waitForCodeServer()) {
-            triggerShutdown();
-            ErlLogger.error(COULD_NOT_CONNECT, getNodeName());
-        }
-
+    	localNode = startLocalNode();
+    	eventMBox = createMbox("rex");
+    	rpcSite = new RpcSite(this, localNode, getNodeName());    	
+    	connect();    	
+    	rpcSite.setConnected(true);
+    	ErlLogger.debug("%s connect to %s state is true.", localNode, getNodeName());     
+    	if (!waitForCodeServer()) {
+    		triggerShutdown();
+    		ErlLogger.error(COULD_NOT_CONNECT, getNodeName());
+    	}
     }
 
     @Override
@@ -294,13 +293,13 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
     }
 
     private void wait_for_epmd() {
-        wait_for_epmd(null);
+        wait_for_epmd("localhost");
     }
 
     private void wait_for_epmd(final String host) {
         // If anyone has a better solution for waiting for epmd to be up, please
         // let me know
-        int tries = 30;
+        int tries = 20;
         boolean ok = false;
         do {
             Socket s;
@@ -356,25 +355,25 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
     }
 
     private class ErlideNodeStatus extends OtpNodeStatus {
-        @Override
-        public void remoteStatus(final String node, final boolean up,
-                final Object info) {
-//            if (node.equals(getNodeName()) && !up) {
-//                crashed();
-//                triggerShutdown();
-//            }
-        	// Hack huaqiao, maybe network loss connect, but node is alive
-        	// then try connect to javaNode.
-            if (up) {
-                ErlLogger.debug("Node %s is up", getNodeName());
-            } else if(stopped) {
-                ErlLogger.debug("Node %s is stopped, info: %s", getNodeName(),
-                        info);
-            } else {
-                ErlLogger.debug("Node %s is loss connect, try reconnect. info: %s", getNodeName(),
-                        info);
-            }
-        }
+    	@Override
+    	public void remoteStatus(final String node, final boolean up,
+    			final Object info) {
+    		//          if (node.equals(getNodeName()) && !up) {
+    		//          crashed();
+    		//          triggerShutdown();
+    		//      }
+    		// Hack huaqiao, maybe network loss connect, but node is alive
+    		// then try connect to javaNode.
+    		if (up) {
+    			ErlLogger.debug("Node %s is up", getNodeName());
+    		} else if(stopped) {
+    			ErlLogger.debug("Node %s is stopped, info: %s", getNodeName(),
+    					info);
+    		} else {
+    			ErlLogger.debug("Node %s is loss connect, try reconnect. info: %s", getNodeName(),
+    					info);
+    		}
+    	}
     }
 
     @Subscribe
@@ -416,5 +415,14 @@ public class ErlRuntime extends AbstractExecutionThreadService implements
             ErlLogger.debug("Runtime %s stopping", getNodeName());
         }
     }
+
+	protected void waitForExit() throws ErlRuntimeException {
+		ErlLogger.debug("waitForExit %s ", getNodeName());
+		
+	}
+
+	public int getExitCode() {
+		return -1;
+	}
 
 }
