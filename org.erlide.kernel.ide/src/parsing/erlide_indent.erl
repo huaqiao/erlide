@@ -511,8 +511,8 @@ i_macro_rest(R0, I) ->
       R0;
         K ->
             case erlide_scan:reserved_word(K) of
-                true ->
-                    R0;
+				true when K =/= 'type'; K =/= 'spec' ->
+					R0;
                 _ ->
                     case is_binary_op(K) of
                         false ->

@@ -89,7 +89,7 @@ get_function(Tokens, Exports, Imports) ->
 
 get_attribute([#token{kind='-', offset=Offset, line=Line},
                #token{kind=Kind, line=_Line, offset=_Offset, value=Name} | Args] = Attribute)
-  when (Kind=:='spec') or ((Kind=:=atom) and (Name=:='type'))
+  when (Kind=:='spec') or (Kind=:='type') or ((Kind=:=atom) and (Name=:='type'))
            or ((Kind=:=atom) and (Name=:='opaque'))->
     %% -spec, -type or -opaque
     get_type_attribute(Kind, Name, Offset, Line, Attribute, Args);

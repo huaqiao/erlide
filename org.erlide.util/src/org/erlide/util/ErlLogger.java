@@ -29,10 +29,11 @@ public class ErlLogger {
     private String logDir;
     private ConsoleHandler consoleHandler = null;
     private FileHandler fileHandler = null;
+  
 
     public static ErlLogger getInstance() {
         if (instance == null) {
-            instance = new ErlLogger();
+            instance = new ErlLogger();      
         }
         return instance;
     }
@@ -41,6 +42,10 @@ public class ErlLogger {
         logger = null;
     }
 
+    public boolean isTest() {
+    	return SystemConfiguration.getInstance().isTest();
+    }
+    
     public final void setLogDir(final String dir) {
         logger.removeHandler(consoleHandler);
         logger.removeHandler(fileHandler);
@@ -59,7 +64,7 @@ public class ErlLogger {
         final String str = o.length == 0 ? fmt : String.format(fmt, o);
         final String msg = "(" + el.getFileName() + ":" + el.getLineNumber()
                 + ") : " + str;
-        if (logger != null) {
+        if (logger != null && isTest()) {
             logger.log(kind, msg);
         }
     }
@@ -69,7 +74,7 @@ public class ErlLogger {
         final String str = exception.getMessage();
         final String msg = "(" + el.getFileName() + ":" + el.getLineNumber()
                 + ") : " + str;
-        if (logger != null) {
+        if (logger != null && isTest()) {
             logger.log(kind, msg, exception);
         }
     }
@@ -79,7 +84,7 @@ public class ErlLogger {
         final Level kind = Level.parse(skind);
         final String str = o.length == 0 ? fmt : String.format(fmt, o);
         final String msg = "(" + module + ":" + line + ") : " + str;
-        if (logger != null) {
+        if (logger != null && isTest()) {
             logger.log(kind, msg);
         }
     }

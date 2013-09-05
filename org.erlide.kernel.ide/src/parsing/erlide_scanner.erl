@@ -60,6 +60,8 @@ get_token_at(ScannerName, Offset) when is_atom(ScannerName), is_integer(Offset) 
 
 initial_scan(ScannerName, ModuleFileName, InitialText, StateDir, UseCache, Logging)
   when is_atom(ScannerName), is_list(ModuleFileName), is_list(InitialText), is_list(StateDir) ->
+	%% If initial_scan, then delete cache file.
+	catch erlide_noparse:remove_cache_files(ScannerName, StateDir),
     erlide_scanner_server:server_cmd(ScannerName, initial_scan,
                {ScannerName, ModuleFileName, InitialText, StateDir, UseCache, Logging}).
 

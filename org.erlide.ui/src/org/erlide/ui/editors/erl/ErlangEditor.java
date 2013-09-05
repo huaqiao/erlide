@@ -52,7 +52,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IEditorInput;
-import org.eclipse.ui.IEditorPart;
+//import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.IPartService;
 import org.eclipse.ui.IPathEditorInput;
@@ -273,15 +273,15 @@ public class ErlangEditor extends AbstractErlangEditor implements
         }
     }
 
-    protected final boolean isActiveEditor() {
-        final IWorkbenchWindow window = getSite().getWorkbenchWindow();
-        final IWorkbenchPage page = window.getActivePage();
-        if (page == null) {
-            return false;
-        }
-        final IEditorPart activeEditor = page.getActiveEditor();
-        return activeEditor != null && activeEditor.equals(this);
-    }
+//    protected final boolean isActiveEditor() {
+//        final IWorkbenchWindow window = getSite().getWorkbenchWindow();
+//        final IWorkbenchPage page = window.getActivePage();
+//        if (page == null) {
+//            return false;
+//        }
+//        final IEditorPart activeEditor = page.getActiveEditor();
+//        return activeEditor != null && activeEditor.equals(this);
+//    }
 
     @Override
     protected void createActions() {
