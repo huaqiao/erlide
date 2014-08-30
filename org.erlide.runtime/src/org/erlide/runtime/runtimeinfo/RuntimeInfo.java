@@ -11,23 +11,31 @@
 package org.erlide.runtime.runtimeinfo;
 
 import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.erlide.runtime.api.RuntimeVersion;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public final class RuntimeInfo {
 
     private final String name;
-    private final String homeDir;
+    private final String otpHomeDir;
     private final String args;
     private final Collection<String> codePath;
+    private final boolean valid;
 
-    private RuntimeVersion version_cached = null;
+    private RuntimeVersion version = null;
 
     public static final RuntimeInfo NO_RUNTIME_INFO = new RuntimeInfo("");
 
@@ -81,16 +89,21 @@ public final class RuntimeInfo {
         this(name, ".", "", new ArrayList<String>());
     }
 
-    public RuntimeInfo(final String name, final String homeDir,
-            final String args, final Collection<String> codePath) {
+    public RuntimeInfo(final String name, final String otpHomeDir, final String args,
+            final Collection<String> codePath) {
+        Preconditions.checkArgument(name != null);
+        Preconditions.checkArgument(otpHomeDir != null);
+        Preconditions.checkArgument(args != null);
+        Preconditions.checkArgument(codePath != null);
         this.name = name;
-        this.homeDir = homeDir;
+        this.otpHomeDir = otpHomeDir;
         this.args = args;
-        this.codePath = Collections.unmodifiableCollection(codePath);
+        this.codePath = ImmutableList.copyOf(codePath);
+        valid = isValidOtpHome(otpHomeDir);
     }
 
     public RuntimeInfo(@NonNull final RuntimeInfo o) {
-        this(o.name, o.homeDir, o.args, o.codePath);
+        this(o.name, o.otpHomeDir, o.args, o.codePath);
     }
 
     public String getArgs() {
@@ -99,12 +112,12 @@ public final class RuntimeInfo {
 
     @Override
     public String toString() {
-        return String.format("Runtime<%s (%s) %s [%s]>", getName(),
-                getOtpHome(), getVersion(), getArgs());
+        return String.format("Runtime<%s (%s) %s [%s]>", getName(), getOtpHome(),
+                getVersion(), getArgs());
     }
 
     public String getOtpHome() {
-        return homeDir;
+        return otpHomeDir;
     }
 
     public String getName() {
@@ -115,8 +128,27 @@ public final class RuntimeInfo {
         return codePath;
     }
 
+    @Override
+    public boolean equals(final Object other) {
+        if (!(other instanceof RuntimeInfo)) {
+            return false;
+        }
+        final RuntimeInfo other1 = (RuntimeInfo) other;
+        return Objects.equal(otpHomeDir + "|" + args + "|" + codePath.toString(),
+                other1.otpHomeDir + "|" + other1.args + "|" + other1.codePath.toString());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(otpHomeDir, args, codePath);
+    }
+
+    public boolean isValid() {
+        return valid;
+    }
+
     public static boolean validateLocation(final String path) {
-        final String v = RuntimeVersion.getRuntimeVersion(path);
+        final String v = getRuntimeVersion(path);
         return v != null;
     }
 
@@ -178,10 +210,101 @@ public final class RuntimeInfo {
     }
 
     public RuntimeVersion getVersion() {
-        if (version_cached == null) {
-            version_cached = RuntimeVersion.getVersion(homeDir);
+        if (version == null) {
+            version = getVersion(otpHomeDir);
         }
-        return version_cached;
+        return version;
+    }
+
+    public static RuntimeVersion getVersion(final String homeDir) {
+        final String label = getRuntimeVersion(homeDir);
+        final String micro = getMicroRuntimeVersion(homeDir);
+        return RuntimeVersion.Serializer.parse(label, micro);
+    }
+
+    public static String getRuntimeVersion(final String path) {
+        if (path == null) {
+            return null;
+        }
+        String result = null;
+        final File boot = new File(path + "/bin/start.boot");
+        try {
+            final FileInputStream is = new FileInputStream(boot);
+            try {
+                is.skip(14);
+                readstring(is);
+                result = readstring(is);
+            } finally {
+                is.close();
+            }
+        } catch (final IOException e) {
+        }
+        return result;
+    }
+
+    public static String getMicroRuntimeVersion(final String path) {
+        if (path == null) {
+            return null;
+        }
+        String result = null;
+
+        // now get micro version from kernel's minor version
+        final File lib = new File(path + "/lib");
+        final File[] kernels = lib.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(final File pathname) {
+                try {
+                    boolean r = pathname.isDirectory();
+                    r &= pathname.getName().startsWith("kernel-");
+                    final String canonicalPath = pathname.getCanonicalPath()
+                            .toLowerCase();
+                    final String absolutePath = pathname.getAbsolutePath().toLowerCase();
+                    r &= canonicalPath.equals(absolutePath);
+                    return r;
+                } catch (final IOException e) {
+                    return false;
+                }
+            }
+        });
+        if (kernels != null && kernels.length > 0) {
+            final int[] krnls = new int[kernels.length];
+            for (int i = 0; i < kernels.length; i++) {
+                final String k = kernels[i].getName();
+                try {
+                    int p = k.indexOf('.');
+                    if (p < 0) {
+                        krnls[i] = 0;
+                    } else {
+                        p = k.indexOf('.', p + 1);
+                        if (p < 0) {
+                            krnls[i] = 0;
+                        } else {
+                            krnls[i] = Integer.parseInt(k.substring(p + 1));
+                        }
+                    }
+                } catch (final Exception e) {
+                    krnls[i] = 0;
+                }
+            }
+            Arrays.sort(krnls);
+            result = Integer.toString(krnls[krnls.length - 1]);
+        }
+        return result;
+    }
+
+    static String readstring(final InputStream is) {
+        try {
+            is.read();
+            byte[] b = new byte[2];
+            is.read(b);
+            final int len = b[0] * 256 + b[1];
+            b = new byte[len];
+            is.read(b);
+            final String s = new String(b);
+            return s;
+        } catch (final IOException e) {
+            return null;
+        }
     }
 
 }

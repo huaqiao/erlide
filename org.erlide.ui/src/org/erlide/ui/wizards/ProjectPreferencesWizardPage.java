@@ -38,6 +38,7 @@ import org.eclipse.wb.swt.SWTResourceManager;
 import org.erlide.backend.BackendCore;
 import org.erlide.model.root.OldErlangProjectProperties;
 import org.erlide.model.root.PathSerializer;
+import org.erlide.model.root.ProjectPreferencesConstants;
 import org.erlide.runtime.api.RuntimeVersion;
 import org.erlide.ui.internal.ErlideUIPlugin;
 import org.erlide.util.PreferencesUtils;
@@ -290,8 +291,7 @@ public class ProjectPreferencesWizardPage extends WizardPage {
             prefs.setOutputDir(new Path(output.getText()));
             prefs.setSourceDirs(PathSerializer.unpackList(source.getText()));
             prefs.setIncludeDirs(PathSerializer.unpackList(include.getText()));
-            final RuntimeVersion rv = new RuntimeVersion(
-                    runtimeVersion.getText());
+            final RuntimeVersion rv = RuntimeVersion.Serializer.parse(runtimeVersion.getText());
             prefs.setRuntimeVersion(rv);
             if (externalModules != null) {
                 prefs.setExternalModulesFile(externalModules.getText());

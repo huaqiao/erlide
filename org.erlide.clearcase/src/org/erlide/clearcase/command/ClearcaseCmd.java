@@ -26,11 +26,13 @@ import org.eclipse.core.resources.IStorage;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jface.dialogs.IInputValidator;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IEditorInput;
@@ -59,8 +61,6 @@ public class ClearcaseCmd extends AbstractHandler {
 
 	final String ct = "/usr/atria/bin/cleartool";
 	final String xcl = "/usr/atria/bin/xclearcase";
-
-	StructuredViewer viewer;
 
 	@Override
 	public Object execute(final ExecutionEvent event) throws ExecutionException {
@@ -105,6 +105,8 @@ public class ClearcaseCmd extends AbstractHandler {
 			do_action(true, xcl);
 
 		} else if (actionId.equals("org.erlide.clearcase.refresh")) {
+			// @todo Need to improve, because the current algorithms have no
+			// effect.
 			refresh();
 
 		} else {
@@ -188,13 +190,19 @@ public class ClearcaseCmd extends AbstractHandler {
 	}
 
 	private void refresh() {
+		IProgressMonitor progress = new NullProgressMonitor();
 		try {
+			progress.beginTask("Processing", 1000);
 			final IPath p = new Path(path);
 			final IFile r = ResourcesPlugin.getWorkspace().getRoot().getFile(p);
-			p.toFile().setLastModified(System.currentTimeMillis() + 5000);
-			r.refreshLocal(1000 + IResource.DEPTH_INFINITE, null);
+			// p.toFile().setLastModified(System.currentTimeMillis() +
+			// 5000);
+			r.refreshLocal(IResource.DEPTH_INFINITE, new SubProgressMonitor(
+					progress, 1000));
 		} catch (CoreException e) {
 			e.printStackTrace();
+		} finally {
+			progress.done();
 		}
 	}
 

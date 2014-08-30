@@ -22,13 +22,14 @@ public class ErlProjectInfo {
     }
 
     public ErlProjectInfo(final ErlProjectLayout layout) {
-        this(new RuntimeVersion("R14B"), layout);
+        this(RuntimeVersion.Serializer.parse("R14B"), layout);
     }
 
-    public ErlProjectInfo(final RuntimeVersion version,
+    public ErlProjectInfo(RuntimeVersion version,
             final ErlProjectLayout layout) {
         requiredRuntimeVersion = version;
         this.layout = layout;
+        return;
     }
 
     public Collection<PathEntry> getDependencies() {

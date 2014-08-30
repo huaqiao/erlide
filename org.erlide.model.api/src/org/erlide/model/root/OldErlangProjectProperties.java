@@ -89,8 +89,10 @@ public final class OldErlangProjectProperties implements
                 ProjectPreferencesConstants.OUTPUT_DIR,
                 ProjectPreferencesConstants.DEFAULT_OUTPUT_DIR);
         outputDirs = PathSerializer.unpackList(outputDirsStr);
-        runtimeVersion = new RuntimeVersion(node.get(
+        
+        runtimeVersion = RuntimeVersion.Serializer.parse(node.get(
                 ProjectPreferencesConstants.RUNTIME_VERSION, null));
+
         runtimeName = node.get(ProjectPreferencesConstants.RUNTIME_NAME, null);
         if (!runtimeVersion.isDefined()) {
             if (runtimeName == null) {

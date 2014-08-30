@@ -41,11 +41,10 @@ public final class RuntimeInfoCatalog implements IRuntimeInfoCatalog {
     }
 
     @Override
-    public synchronized void setRuntimes(
-            final Collection<RuntimeInfo> elements, final String dfltRuntime,
-            String ideRuntime) {
+    public synchronized void setRuntimes(final Collection<RuntimeInfo> elements,
+            final String dfltRuntime, final String ideRuntime) {
         runtimes.clear();
-        if (elements.size() == 0) {
+        if (elements.isEmpty()) {
             initializeRuntimesList();
         }
 
@@ -56,10 +55,8 @@ public final class RuntimeInfoCatalog implements IRuntimeInfoCatalog {
         if (defaultRuntimeName == null) {
             setDefaultRuntimes();
         }
-        if (ideRuntime == null) {
-            ideRuntime = defaultRuntimeName;
-        }
-        erlideRuntime = runtimes.get(ideRuntime);
+        erlideRuntime = runtimes
+                .get(ideRuntime != null ? ideRuntime : defaultRuntimeName);
         // Asserts.isNotNull(erlideRuntime);
     }
 
@@ -83,8 +80,7 @@ public final class RuntimeInfoCatalog implements IRuntimeInfoCatalog {
 
     @SuppressWarnings("null")
     @Override
-    public @NonNull
-    RuntimeInfo getRuntime(final String name) {
+    public @NonNull RuntimeInfo getRuntime(final String name) {
         final RuntimeInfo rt = runtimes.get(name);
         if (rt != null) {
             return rt;
@@ -95,7 +91,7 @@ public final class RuntimeInfoCatalog implements IRuntimeInfoCatalog {
     @Override
     public synchronized void removeRuntime(final String name) {
         runtimes.remove(name);
-        if (runtimes.size() > 0) {
+        if (!runtimes.isEmpty()) {
             if (erlideRuntime.getName().equals(name)) {
                 erlideRuntime = runtimes.values().iterator().next();
             }
@@ -118,8 +114,7 @@ public final class RuntimeInfoCatalog implements IRuntimeInfoCatalog {
         defaultRuntimeName = name;
     }
 
-    private synchronized void setErlideRuntime(
-            final @NonNull RuntimeInfo runtime) {
+    private synchronized void setErlideRuntime(final @NonNull RuntimeInfo runtime) {
         final RuntimeInfo old = erlideRuntime;
         if (old == null || !old.equals(runtime)) {
             erlideRuntime = runtime;
@@ -130,23 +125,21 @@ public final class RuntimeInfoCatalog implements IRuntimeInfoCatalog {
 
     @SuppressWarnings("null")
     @Override
-    public synchronized @NonNull
-    RuntimeInfo getErlideRuntime() {
+    public synchronized @NonNull RuntimeInfo getErlideRuntime() {
         return erlideRuntime;
     }
 
     @Override
-    public synchronized @NonNull
-    RuntimeInfo getDefaultRuntime() {
+    public synchronized @NonNull RuntimeInfo getDefaultRuntime() {
         return getRuntime(getDefaultRuntimeName());
     }
 
     @Override
     public RuntimeInfo getRuntime(final RuntimeVersion runtimeVersion,
             final String runtimeName) {
-        final List<RuntimeInfo> vsns = VersionLocator.locateVersion(
-                runtimeVersion, runtimes.values());
-        if (vsns.size() == 0) {
+        final List<RuntimeInfo> vsns = VersionLocator.locateVersion(runtimeVersion,
+                runtimes.values(), false);
+        if (vsns.isEmpty()) {
             return null;
         } else if (vsns.size() == 1) {
             return vsns.get(0);
@@ -186,15 +179,15 @@ public final class RuntimeInfoCatalog implements IRuntimeInfoCatalog {
      * <li>Look for existing Erlang runtimes in a few obvious places and install
      * them, choosing a suitable one as default.</li>
      * </ul>
-     * 
+     *
      */
     @Override
     public void initializeRuntimesList() {
-        final Collection<RuntimeInfo> found = RuntimeFinder
-                .guessRuntimeLocations();
+        final Collection<RuntimeInfo> found = RuntimeFinder.guessRuntimeLocations();
         for (final RuntimeInfo info : found) {
             addRuntime(info);
         }
+        setDefaultRuntimes();
     }
 
     private void setDefaultRuntimes() {
@@ -209,7 +202,7 @@ public final class RuntimeInfoCatalog implements IRuntimeInfoCatalog {
                 return o2.getName().compareTo(o1.getName());
             }
         });
-        if (list.size() > 0) {
+        if (!list.isEmpty()) {
             final String firstName = list.get(0).getName();
             if (defaultRuntimeName == null) {
                 setDefaultRuntime(firstName);

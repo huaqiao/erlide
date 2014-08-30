@@ -11,6 +11,8 @@
  *******************************************************************************/
 package org.erlide.model.root;
 
+import org.erlide.runtime.api.RuntimeVersion;
+
 /**
  * Constants used in project and plugin preferences
  * 
@@ -34,8 +36,10 @@ public final class ProjectPreferencesConstants {
     public static final String DEFAULT_EXTERNAL_INCLUDES = "";
 
     public static final String RUNTIME_VERSION = "backend_version";
-    public static final String DEFAULT_RUNTIME_VERSION = "R14B";
-
+    public static final RuntimeVersion DEFAULT_RUNTIME_VERSION = new RuntimeVersion(16);
+    public static final RuntimeVersion[] SUPPORTED_VERSIONS = { new RuntimeVersion(15),
+            new RuntimeVersion(16), new RuntimeVersion(17), new RuntimeVersion(18), new RuntimeVersion(19) };
+    
     public static final String RUNTIME_NAME = "backend_name";
     public static final String DEFAULT_RUNTIME_NAME = "R14B";
 
